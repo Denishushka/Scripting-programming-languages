@@ -1,2 +1,3 @@
-# Scripting-programming-languages
-Scripting programming languages
+# LABS_scripts_programming
+Сдача лабораторных работ по предмету "Скриптовые языки программирования"
+Студент Рагулин Денис Сергеевич Группа: АСУб-21-2
