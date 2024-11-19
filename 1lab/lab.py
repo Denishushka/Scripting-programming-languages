@@ -2,17 +2,19 @@ import requests
 
 url = 'https://jsonplaceholder.typicode.com/posts'
 
+#GET запрос
 response = requests.get(url)
 
 if response.status_code == 200:
     posts = response.json()
-
+#Фильтрация постов, отбираются только те где userId четное
     even_user_posts = [post for post in posts if post['userId'] % 2 == 0]
 
     for post in even_user_posts:
         print(post)
 
 
+#Post запрос
 new_post = {
     'title': 'Тестовый пост',
     'body': 'Это тело тестового поста',

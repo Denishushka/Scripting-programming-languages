@@ -1,9 +1,12 @@
 import socket
 
 def start_tcp_server(address=('127.0.0.1', 65433)):
+    #Создаёт сокет
     srv_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     with srv_socket:
+        #Привязывает сокет к адресу и порту
         srv_socket.bind(address)
+        #Слушает входящие подключения
         srv_socket.listen()
         print(f"Сервер активен по адресу {address[0]}:{address[1]}")
         
