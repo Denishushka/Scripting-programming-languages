@@ -13,11 +13,11 @@ class DatabaseViewer(QMainWindow):
         self.setWindowTitle("Просмотр базы данных")
         self.setGeometry(300, 300, 800, 600)
 
-        self.setupUI()
-        self.connect_to_db()
-        self.load_data()
+        self.setupUI()#Настройки интерфейса 
+        self.connect_to_db()#Подключения к базе данных 
+        self.load_data()#Загрузки данных в таблицу
 
-    def setupUI(self):
+    def setupUI(self): 
         
         self.main_widget = QWidget(self) #основной виджет в который положим остальные
         self.setCentralWidget(self.main_widget) #обозначаем main_widget как центральный виджет
@@ -30,11 +30,15 @@ class DatabaseViewer(QMainWindow):
         self.add_button.clicked.connect(self.add_posts)
         self.delete_button = QPushButton("Удалить", self)
         self.delete_button.clicked.connect(self.delete_record)
+        self.refresh_button = QPushButton("Обновить", self)
+        self.refresh_button.clicked.connect(self.refresh_data)  
+
 
       
         button_layout = QHBoxLayout()
         button_layout.addWidget(self.add_button)#добавляем кнопку на макет
         button_layout.addWidget(self.delete_button)
+        button_layout.addWidget(self.refresh_button) 
         layout = QVBoxLayout()
         layout.addLayout(button_layout)  #добавляем кнопки
         layout.addWidget(self.search_box) #добавляем поиск
@@ -113,6 +117,7 @@ class DatabaseViewer(QMainWindow):
         else:
             QMessageBox.warning(self, "Ошибка", "Не удалось добавить запись.")
 
+    def delete_record(self):
         
         index = self.table_view.currentIndex()
         if index.isValid():
@@ -129,6 +134,10 @@ class DatabaseViewer(QMainWindow):
                     QMessageBox.warning(self, "Ошибка", "Не удалось удалить запись.")
         else:
             QMessageBox.warning(self, "Ошибка", "Выберите запись для удаления.")
+    
+    def refresh_data(self):
+        self.model.select()  # Перезагружаем данные из базы
+        QMessageBox.information(self, "Обновление", "Данные успешно обновлены!")
 
 
 if __name__ == "__main__":
