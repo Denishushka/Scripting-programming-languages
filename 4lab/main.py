@@ -4,7 +4,8 @@ from PyQt5.QtWidgets import (
     QLineEdit, QPushButton, QHBoxLayout, QMessageBox, QFormLayout
 )
 from PyQt5.QtSql import QSqlDatabase, QSqlTableModel, QSqlQuery
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import QTimer, QRegExp
+from PyQt5.QtGui import QRegExpValidator
 
 
 class DatabaseViewer(QMainWindow):
@@ -13,43 +14,44 @@ class DatabaseViewer(QMainWindow):
         self.setWindowTitle("Просмотр базы данных")
         self.setGeometry(300, 300, 800, 600)
 
-        self.setupUI()#Настройки интерфейса 
-        self.connect_to_db()#Подключения к базе данных 
-        self.load_data()#Загрузки данных в таблицу
+        self.setupUI()  # Настройки интерфейса
+        self.connect_to_db()  # Подключения к базе данных
+        self.load_data()  # Загрузки данных в таблицу
+        self.initUI()
 
     def setupUI(self): 
-        
-        self.main_widget = QWidget(self) #основной виджет в который положим остальные
-        self.setCentralWidget(self.main_widget) #обозначаем main_widget как центральный виджет
-        self.search_box = QLineEdit(self)#Создаем поле для текста
-        self.search_box.setPlaceholderText("Поиск по заголовку...")#текст подсказка
-        self.search_box.textChanged.connect(self.filter_data)#при изменении текста вызываем метод фильтрации
+        self.main_widget = QWidget(self)  # Основной виджет
+        self.setCentralWidget(self.main_widget)
+        self.search_box = QLineEdit(self)  # Поле для поиска
+        self.search_box.setPlaceholderText("Поиск по заголовку...")
+        self.search_box.textChanged.connect(self.filter_data)
 
-        # Кнопки и методы срабатывающие при нажатии на них
+        # Кнопки и их действия
         self.add_button = QPushButton("Добавить", self)
         self.add_button.clicked.connect(self.add_posts)
         self.delete_button = QPushButton("Удалить", self)
         self.delete_button.clicked.connect(self.delete_record)
         self.refresh_button = QPushButton("Обновить", self)
-        self.refresh_button.clicked.connect(self.refresh_data)  
+        self.refresh_button.clicked.connect(self.refresh_data)
 
-
-      
+        # Макет кнопок
         button_layout = QHBoxLayout()
-        button_layout.addWidget(self.add_button)#добавляем кнопку на макет
+        button_layout.addWidget(self.add_button)
         button_layout.addWidget(self.delete_button)
-        button_layout.addWidget(self.refresh_button) 
+        button_layout.addWidget(self.refresh_button)
+
+        # Основной макет
         layout = QVBoxLayout()
-        layout.addLayout(button_layout)  #добавляем кнопки
-        layout.addWidget(self.search_box) #добавляем поиск
+        layout.addLayout(button_layout)
+        layout.addWidget(self.search_box)
         self.table_view = QTableView(self)
         self.table_view.setAlternatingRowColors(True)
-        layout.addWidget(self.table_view)  #добавляем таблицу
-        self.main_widget.setLayout(layout) #устанавливаем созданный макет в основной виджет.
+        layout.addWidget(self.table_view)
+        self.main_widget.setLayout(layout)
 
     def connect_to_db(self):
         self.db = QSqlDatabase.addDatabase("QSQLITE")
-        self.db.setDatabaseName("posts.db")  
+        self.db.setDatabaseName("posts.db")
         if not self.db.open():
             print("Не удалось подключиться к базе данных.")
             return
@@ -63,21 +65,34 @@ class DatabaseViewer(QMainWindow):
         self.model.select()
         QTimer.singleShot(0, self.setwidths)
 
+    def initUI(self):
+        self.setGeometry(300, 300, 250, 150)
+        self.setWindowTitle('Message box')
+        self.show()
+
+    def closeEvent(self, event):
+        reply = QMessageBox.question(self, 'Message',
+                                     "Are you sure to quit?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            event.accept()
+        else:
+            event.ignore()
+
     def setwidths(self):
         total_width = self.table_view.width()
-        title_percentage = 30  
-        body_percentage = 55   
-        id_persentage = 5
-        user_id_persentage = 10
+        title_percentage = 30
+        body_percentage = 55
+        id_percentage = 5
+        user_id_percentage = 10
         
         title_width = int((title_percentage / 100) * total_width)
         body_width = int((body_percentage / 100) * total_width)
-        id = int((id_persentage / 100) * total_width)
-        user_id = int((user_id_persentage / 100) * total_width)
-        self.table_view.setColumnWidth(0, id)  # Ширина столбца "title"
-        self.table_view.setColumnWidth(1, user_id)   # Ширина столбца "body"
-        self.table_view.setColumnWidth(2, title_width)  # Ширина столбца "title"
-        self.table_view.setColumnWidth(3, body_width)   # Ширина столбца "body"
+        id_width = int((id_percentage / 100) * total_width)
+        user_id_width = int((user_id_percentage / 100) * total_width)
+        self.table_view.setColumnWidth(0, id_width)
+        self.table_view.setColumnWidth(1, user_id_width)
+        self.table_view.setColumnWidth(2, title_width)
+        self.table_view.setColumnWidth(3, body_width)
 
     def resizeEvent(self, event):
         self.setwidths()
@@ -92,15 +107,23 @@ class DatabaseViewer(QMainWindow):
         dialog = QWidget()
         dialog.setWindowTitle("Добавить запись")
         layout = QFormLayout()
+
         user_id_input = QLineEdit(dialog)
+        reg_exp = QRegExp("^[0-9]*$")
+        validator = QRegExpValidator(reg_exp, user_id_input)
+        user_id_input.setValidator(validator)
+
         title_input = QLineEdit(dialog)
         body_input = QLineEdit(dialog)
+
         layout.addRow("User ID:", user_id_input)
         layout.addRow("Title:", title_input)
         layout.addRow("Body:", body_input)
+
         add_button = QPushButton("Добавить", dialog)
         add_button.clicked.connect(lambda: self.save_new_posts(user_id_input.text(), title_input.text(), body_input.text(), dialog))
         layout.addWidget(add_button)
+
         dialog.setLayout(layout)
         dialog.setGeometry(400, 400, 300, 200)
         dialog.show()
@@ -112,16 +135,15 @@ class DatabaseViewer(QMainWindow):
         query.addBindValue(title)
         query.addBindValue(body)
         if query.exec_():
-            self.load_data()  
+            self.load_data()
             dialog.close()
         else:
             QMessageBox.warning(self, "Ошибка", "Не удалось добавить запись.")
 
     def delete_record(self):
-        
         index = self.table_view.currentIndex()
         if index.isValid():
-            record_id = self.model.index(index.row(), 0).data() 
+            record_id = self.model.index(index.row(), 0).data()
             reply = QMessageBox.question(self, 'Подтверждение', 'Вы уверены, что хотите удалить эту запись?',
                                          QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if reply == QMessageBox.Yes:
@@ -134,9 +156,13 @@ class DatabaseViewer(QMainWindow):
                     QMessageBox.warning(self, "Ошибка", "Не удалось удалить запись.")
         else:
             QMessageBox.warning(self, "Ошибка", "Выберите запись для удаления.")
-    
+
     def refresh_data(self):
-        self.model.select()  # Перезагружаем данные из базы
+        if self.model.isDirty():
+            if not self.model.submitAll():
+                QMessageBox.warning(self, "Ошибка", "Не удалось сохранить изменения.")
+                return
+        self.model.select()
         QMessageBox.information(self, "Обновление", "Данные успешно обновлены!")
 
 
